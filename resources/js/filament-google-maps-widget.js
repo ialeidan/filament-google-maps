@@ -160,7 +160,7 @@ export default function filamentGoogleMapsWidget({
 
       const marker = new google.maps.Marker({
         position: point,
-        title: label,
+        // title: label,
         model_id: location.id,
         ...(markerIcon && { icon: markerIcon }),
       });
@@ -172,20 +172,31 @@ export default function filamentGoogleMapsWidget({
       return marker;
     },
     createMarkers: function () {
-      this.markers = this.data.map((location) => {
-        const marker = this.createMarker(location);
-        marker.setMap(this.map);
+        this.markers = this.data.map((location) => {
+            const marker = this.createMarker(location);
+            marker.setMap(this.map);
 
-        if (this.config.markerAction) {
-          google.maps.event.addListener(marker, "click", (event) => {
-            this.$wire.mountAction(this.config.markerAction, {
-              model_id: marker.model_id,
+            // Hover functionality using your existing infoWindow
+            google.maps.event.addListener(marker, "mouseover", () => {
+                this.infoWindow.setContent(location.label); // HTML will render here
+                this.infoWindow.open(this.map, marker);
             });
-          });
-        }
 
-        return marker;
-      });
+            // Close when mouse leaves
+            google.maps.event.addListener(marker, "mouseout", () => {
+                this.infoWindow.close();
+            });
+
+            if (this.config.markerAction) {
+                google.maps.event.addListener(marker, "click", (event) => {
+                    this.$wire.mountAction(this.config.markerAction, {
+                        model_id: marker.model_id,
+                    });
+                });
+            }
+
+            return marker;
+        });
     },
     removeMarker: function (marker) {
       marker.setMap(null);
